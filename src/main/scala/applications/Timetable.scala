@@ -56,7 +56,7 @@ class Timetable(
 
   // The method that builds the timetable as a picture.
   def makeTimetable(dataFilename: String): Picture = {
-  
+
     /*
      First of all, read the data from the text file
      */
@@ -73,7 +73,7 @@ class Timetable(
      * Gather all the activities that share the same slot
      */
     val groupedActivities: Map[Slot, Seq[Activity]] = activities.groupBy(_.slot)
-  
+
     /*
      * Extract the pictures from the slots. The key of the map IS the slot so
      * there is no need to keep this information within the values as well
@@ -108,7 +108,7 @@ class Timetable(
      * contains the day names) and the margin to the sides (the margin contains the
      * hours). This gives a completed table of pictures representing the timetable.
      */
-     
+
     val timetable: Seq[Seq[Picture]] = margin zip (header +: tableData) map (_ +: _)
     timetable.formatAsTable()
   }
@@ -127,6 +127,6 @@ object Timetable {
      * Try using tt2 instead and see the difference.
      * Try some other Timetable instances with the same input data.
      */
-    println(tt1.makeTimetable("dat/tt-input.txt"))
+    println(tt2.makeTimetable("dat/tt-input.txt"))
   }
 }

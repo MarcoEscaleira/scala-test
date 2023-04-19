@@ -1,4 +1,3 @@
-[warn] jline-2.14.6.jar no longer exists at C:\Users\P2616960\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\jline\jline\2.14.6\jline-2.14.6.jar
-[debug] not up to date. inChanged = false, force = false
-[debug] Updating ProjectRef(uri("file:/H:/functional%20software/Projeto/project/"), "projeto-build")...
-[debug] Done updating ProjectRef(uri("file:/H:/functional%20software/Projeto/project/"), "projeto-build")
+[debug] not up to date. inChanged = true, force = false
+[debug] Updating ProjectRef(uri("file:/Users/marcoescaleira/personal/scala-test/project/"), "scala-test-build")...
+[debug] Done updating ProjectRef(uri("file:/Users/marcoescaleira/personal/scala-test/project/"), "scala-test-build")

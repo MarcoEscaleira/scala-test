@@ -1,5 +1,6 @@
 package applications
 
+import java.text.SimpleDateFormat
 import lib.picture.Picture
 import lib.picture.Picture.*
 
@@ -127,7 +128,7 @@ object MyCalendar {
       val (datetime, description) = line.split("\\s+").toList.splitAt(5)
       val (List(year, month, day), List(hour, minute)) = datetime map (_.toInt) splitAt 3
       Event(Date(year, month, day), Time(hour, minute), description.mkString(" "))
-  
+
   /**
    * A method to make up random diary events.  Useful for testing.
    * N.B. It over-writes the file at EventsPath
@@ -173,25 +174,62 @@ object MyCalendar {
    * @return A nicely formatted calendar page that contains a view of the given
    *         month in the given year.
    */
+  private case class Slot(day: Int, week: Int)
+  private case class EventSlot(slot: Slot, picture: Picture)
+
+  private val inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")
+  private val outputFormatDefault = new SimpleDateFormat("ww")
+
+  private val SLOT_WIDTH: Int = 10
+
+  private def parseLine(event: Event): EventSlot = {
+    val day: Int = getDayOfWeek(event.date.year, event.date.month, event.date.day)
+    val weekOfYear: Int = outputFormatDefault.format(inputFormat.parse(s"${event.date.year}-${event.date.month}-${event.date.day} 00:00:00.0")).toInt
+    val xs = event.desc.drop(5)
+    EventSlot(Slot(day, weekOfYear), Picture(xs, ' ').fixWidth(SLOT_WIDTH))
+  }
+
+  private def also(p1: Picture, p2: Picture): Picture = p1 ^ Picture("ALSO").borderT(' ').borderB(' ').fixWidth(SLOT_WIDTH) ^ p2
+
+  private val firstWeekDay: Int = 0 // Monday
+  private val lastWeekDay: Int = 6 // Sunday
+
   def displayMonth(year: Int, month: Int, events: Seq[Event]): Picture = {
-    // Add code here to construct the calendar month picture
-    //Picture("March2024")+ namesOfDays
+    val days: List[Int] = (firstWeekDay to lastWeekDay).toList
 
-   // val headere: Picture = namesOfDays.spread()
-     val nada = namesOfDays.spread().borderR().frame;
-    //nameOfMonth.filter()
+    val daysInThisMonth = daysInMonth(year, month)
+    val firstWeekOfMonthYear = outputFormatDefault.format(inputFormat.parse(s"$year-$month-01 00:00:00.0")).toInt;
+    val lastWeekMonthYear = outputFormatDefault.format(inputFormat.parse(s"$year-$month-$daysInThisMonth 00:00:00.0")).toInt
 
-    //first filte events, then sort events using group map, then use picture to events above each other
-    //filter events
-    val currentMonthsEvents:Seq[Event] = events.filter(e=>e.date.month == month && e.date.year == year)
+    val weeks: List[Int] = (firstWeekOfMonthYear to lastWeekMonthYear).toList
+    val weekLabels = "Week " :: (weeks map (t => s"$t"))
+    val margin = weekLabels map (Picture(_) fixWidth (4))
 
-    //sort events
+    //first filter events, then sort events using group map, then use picture to events above each other
+    val filteredEvents: Seq[Event] = events.filter(e=>e.date.month == month && e.date.year == year)
 
-    //use picture to put them above
+    val eventsParsed: Seq[EventSlot] = filteredEvents map parseLine
 
-    Picture("" + nada);
+    val groupedEvents: Map[Slot, Seq[EventSlot]] = eventsParsed.groupBy(_.slot)
 
+    val groupedEventsPictures: Map[Slot, Seq[Picture]] =
+      groupedEvents map ((slot, evs) => (slot, evs map (_.picture)))
 
+    val groupedAndJoinedActivityPictures: Map[Slot, Picture] =
+      groupedEventsPictures map ((slot, evs) => (slot, evs reduceLeft also))
+
+    val tableData: Seq[Seq[Picture]] =
+      for week <- weeks
+        yield
+          for day <- days
+            yield
+              groupedAndJoinedActivityPictures.getOrElse(Slot(day, week), Picture(' '))
+
+    val timetable: Seq[Seq[Picture]] = margin zip (namesOfDays +: tableData) map (_ +: _)
+
+    val monthName: Picture = nameOfMonth.getOrElse(month, Picture(""))
+    val buildBody = Picture(s"$monthName $year") ^ timetable.formatAsTable()
+    Picture(s"$buildBody")
   }
 
   /**
@@ -201,16 +239,16 @@ object MyCalendar {
    */
   @main def constructRandomEventFile(): Unit =
     makeUpEvents(1000, EventsPath)
-  
+
   @main def coursework(): Unit =
     /* Read the events from an external file... */
     val events = readEventsFromFile(EventsPath)
-    
+
     /* Or create the data structure by hand... */
     // val es = Seq(
     // Event(Date(2023, 2, 22), Time(9, 0), "CTEC3904 lecture in MS1.02")
-//   //etc.
-//    )
+    //   //etc.
+    // )
     /* Choose a year/month to display from a sequence of events... */
     println(displayMonth(2023, 4, events))
 }
